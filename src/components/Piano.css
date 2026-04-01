@@ -1,0 +1,146 @@
+/* ── Note display ── */
+.note-display {
+  font-size: 1.4rem;
+  height: 2.5rem;
+  margin-bottom: 1.2rem;
+  font-weight: 300;
+  letter-spacing: 4px;
+  color: var(--accent);
+  transition: opacity 0.15s;
+}
+
+/* ── Piano container ── */
+.piano {
+  display: flex;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 12px 14px;
+}
+
+/* ── Full 88-key mode ── */
+.piano.piano-full {
+  padding: 8px 6px 10px;
+  max-width: 98vw;
+  overflow-x: auto;
+}
+
+.piano.piano-full .key.white {
+  width: 22px;
+  height: 160px;
+  margin-right: 1px;
+}
+
+.piano.piano-full .key.black {
+  width: 14px;
+  height: 100px;
+  margin-left: -8px;
+  margin-right: -8px;
+}
+
+.piano.piano-full .key .label {
+  font-size: 0.35rem;
+}
+
+.piano.piano-full .key .keybind {
+  display: none;
+}
+
+/* ── Individual key ── */
+.key {
+  position: relative;
+  cursor: pointer;
+  border-radius: 0 0 6px 6px;
+  transition: background 0.08s, box-shadow 0.08s, transform 0.06s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 12px;
+  user-select: none;
+}
+
+.key .label {
+  font-size: 0.6rem;
+  font-weight: 400;
+  opacity: 0.4;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+.key .keybind {
+  font-size: 0.55rem;
+  margin-top: 3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* ── White keys ── */
+.key.white {
+  width: 68px;
+  height: 220px;
+  background: var(--key-white);
+  border: 1px solid var(--key-white-border);
+  margin-right: 2px;
+  z-index: 1;
+  color: var(--text-dim);
+}
+
+.key.white:last-child {
+  margin-right: 0;
+}
+
+.key.white:hover {
+  background: var(--key-white-hover);
+}
+
+.key.white.active {
+  background: var(--key-active);
+  transform: scaleY(0.98);
+  box-shadow: 0 2px 14px var(--key-active-glow);
+  color: var(--bg);
+}
+
+.key.white.active .label,
+.key.white.active .keybind {
+  opacity: 1;
+}
+
+/* ── Black keys ── */
+.key.black {
+  width: 42px;
+  height: 140px;
+  background: var(--key-black);
+  border: 1px solid #000;
+  margin-left: -22px;
+  margin-right: -22px;
+  z-index: 2;
+  color: var(--text-dim);
+  border-radius: 0 0 5px 5px;
+}
+
+.key.black:hover {
+  background: var(--key-black-hover);
+}
+
+.key.black.active {
+  background: var(--key-black-active);
+  transform: scaleY(0.97);
+  box-shadow: 0 2px 14px var(--key-active-glow);
+  color: var(--bg);
+}
+
+.key.black.active .label,
+.key.black.active .keybind {
+  opacity: 1;
+}
+
+/* ── Disabled state (during MIDI playback) ── */
+.key.disabled {
+  cursor: default;
+}

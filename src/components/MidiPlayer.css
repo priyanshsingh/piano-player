@@ -1,0 +1,111 @@
+/* ── MIDI Player ── */
+.midi-player {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.midi-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.midi-filename {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.midi-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.midi-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.midi-btn {
+  padding: 6px 14px;
+  font-size: 0.72rem;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.midi-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.midi-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.play-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pause-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stop-btn:hover:not(:disabled) {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.upload-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Progress bar ── */
+.midi-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 320px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end));
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.progress-time {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  min-width: 80px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
