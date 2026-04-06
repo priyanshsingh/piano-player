@@ -1,7 +1,5 @@
 .theme-picker {
-  position: fixed;
-  top: 20px;
-  right: 20px;
+  position: relative;
   z-index: 100;
 }
 

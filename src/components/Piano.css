@@ -9,6 +9,22 @@
   transition: opacity 0.15s;
 }
 
+/* ── Tab content area (fixed height to prevent layout shift) ── */
+.tab-content-area {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Piano + falling notes wrapper ── */
+.piano-area {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 /* ── Piano container ── */
 .piano {
   display: flex;
@@ -102,8 +118,12 @@
 .key.white.active {
   background: var(--key-active);
   transform: scaleY(0.98);
-  box-shadow: 0 2px 14px var(--key-active-glow);
+  box-shadow:
+    0 0 18px 4px var(--key-active-glow),
+    0 0 40px 8px var(--accent-glow),
+    inset 0 -4px 12px var(--key-active-glow);
   color: var(--bg);
+  border-color: var(--accent);
 }
 
 .key.white.active .label,
@@ -131,7 +151,10 @@
 .key.black.active {
   background: var(--key-black-active);
   transform: scaleY(0.97);
-  box-shadow: 0 2px 14px var(--key-active-glow);
+  box-shadow:
+    0 0 16px 3px var(--key-active-glow),
+    0 0 30px 6px var(--accent-glow),
+    inset 0 -3px 10px var(--key-active-glow);
   color: var(--bg);
 }
 
@@ -143,4 +166,130 @@
 /* ── Disabled state (during MIDI playback) ── */
 .key.disabled {
   cursor: default;
+}
+
+/* ── Octave indicator ── */
+.octave-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.octave-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-family: inherit;
+  padding: 0;
+  line-height: 1;
+}
+
+.octave-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.octave-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Sustain indicator ── */
+.sustain-indicator {
+  margin-top: 0.8rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  opacity: 0.7;
+  animation: sustainPulse 1s ease-in-out infinite;
+}
+
+@keyframes sustainPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ── Responsive: tablet ── */
+@media (max-width: 768px) {
+  .piano {
+    padding: 8px;
+  }
+
+  .key.white {
+    width: 44px;
+    height: 170px;
+    margin-right: 2px;
+  }
+
+  .key.black {
+    width: 28px;
+    height: 110px;
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+
+  .key .label {
+    font-size: 0.5rem;
+  }
+
+  .key .keybind {
+    font-size: 0.45rem;
+    padding: 1px 3px;
+  }
+
+  .note-display {
+    font-size: 1.1rem;
+    height: 2rem;
+    margin-bottom: 0.8rem;
+  }
+}
+
+/* ── Responsive: mobile ── */
+@media (max-width: 480px) {
+  .piano {
+    padding: 6px;
+    border-radius: 6px;
+  }
+
+  .key.white {
+    width: 32px;
+    height: 140px;
+    margin-right: 1px;
+  }
+
+  .key.black {
+    width: 22px;
+    height: 90px;
+    margin-left: -12px;
+    margin-right: -12px;
+  }
+
+  .key .keybind {
+    display: none;
+  }
+
+  .key .label {
+    font-size: 0.4rem;
+  }
+
+  .note-display {
+    font-size: 0.9rem;
+    height: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
 }

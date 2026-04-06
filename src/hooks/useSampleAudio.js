@@ -1,89 +1,53 @@
-import { useEffect, useRef, useCallback } from 'react'
-import KEY_MAP from '../constants/keyMap'
+import { useEffect, useRef, useCallback, useState } from 'react'
+import { getAudioContext, getOutputNode } from '../audio/audioEngine'
 
 const BASE_URL = import.meta.env.BASE_URL + 'sounds/'
 
-// Pre-load all audio buffers once
 const audioBufferCache = {}
-let audioCtx = null
-
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-  return audioCtx
-}
+const failedSamples = new Set()
+const MAX_POLYPHONY = 16
 
 async function loadBuffer(file) {
   if (audioBufferCache[file]) return audioBufferCache[file]
+  if (failedSamples.has(file)) return null
 
-  const ctx = getAudioCtx()
-  const url = BASE_URL + encodeURIComponent(file)
-  const response = await fetch(url)
-  const arrayBuffer = await response.arrayBuffer()
-  const buffer = await ctx.decodeAudioData(arrayBuffer)
-  audioBufferCache[file] = buffer
-  return buffer
+  try {
+    const ctx = getAudioContext()
+    const url = BASE_URL + encodeURIComponent(file)
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = await ctx.decodeAudioData(arrayBuffer)
+    audioBufferCache[file] = buffer
+    return buffer
+  } catch (err) {
+    failedSamples.add(file)
+    console.warn(`Could not load sample: ${file}`, err.message)
+    return null
+  }
 }
 
-// Preload all samples on first call
-let preloaded = false
-function preloadAll() {
-  if (preloaded) return
-  preloaded = true
-  for (const m of KEY_MAP) {
+function preloadKeys(keyMap) {
+  for (const m of keyMap) {
     loadBuffer(m.file).catch(() => {
       console.warn(`Could not load sample: ${m.file}`)
     })
   }
 }
 
-export default function useSampleAudio(activeKeys, setActiveKeys, enabled = true) {
+export default function useSampleAudio(activeKeys, setActiveKeys, enabled = true, sustainRef, keyMap) {
   const sources = useRef({})
+  const sustained = useRef(new Set())
+  const keyMapRef = useRef(keyMap)
+  const [sampleError, setSampleError] = useState(null)
+  keyMapRef.current = keyMap
 
-  const startNote = useCallback((keyChar) => {
-    if (sources.current[keyChar]) return
-
-    const mapping = KEY_MAP.find((m) => m.key === keyChar)
-    if (!mapping) return
-
-    preloadAll()
-    const ctx = getAudioCtx()
-
-    const buffer = audioBufferCache[mapping.file]
-    if (!buffer) {
-      // Buffer not loaded yet — try loading now
-      loadBuffer(mapping.file).then((buf) => {
-        if (!sources.current[keyChar]) return
-        const src = ctx.createBufferSource()
-        const gain = ctx.createGain()
-        gain.gain.value = 0.8
-        src.buffer = buf
-        src.connect(gain)
-        gain.connect(ctx.destination)
-        src.start()
-        sources.current[keyChar] = { src, gain }
-      })
-      setActiveKeys((prev) => ({ ...prev, [keyChar]: mapping.note }))
-      return
-    }
-
-    const src = ctx.createBufferSource()
-    const gain = ctx.createGain()
-    gain.gain.value = 0.8
-    src.buffer = buffer
-    src.connect(gain)
-    gain.connect(ctx.destination)
-    src.start()
-
-    sources.current[keyChar] = { src, gain }
-    setActiveKeys((prev) => ({ ...prev, [keyChar]: mapping.note }))
-  }, [setActiveKeys])
-
-  const stopNote = useCallback((keyChar) => {
+  const doStop = useCallback((keyChar) => {
     const entry = sources.current[keyChar]
     if (!entry) return
 
     if (entry.gain) {
-      const ctx = getAudioCtx()
+      const ctx = getAudioContext()
       const now = ctx.currentTime
       entry.gain.gain.cancelScheduledValues(now)
       entry.gain.gain.setValueAtTime(entry.gain.gain.value, now)
@@ -99,15 +63,84 @@ export default function useSampleAudio(activeKeys, setActiveKeys, enabled = true
     })
   }, [setActiveKeys])
 
+  const startNote = useCallback((keyChar) => {
+    if (sources.current[keyChar]) return
+
+    const mapping = keyMapRef.current.find((m) => m.key === keyChar)
+    if (!mapping) return
+
+    // Enforce polyphony limit — stop the oldest note
+    const keys = Object.keys(sources.current)
+    if (keys.length >= MAX_POLYPHONY) {
+      doStop(keys[0])
+    }
+
+    preloadKeys(keyMapRef.current)
+    const ctx = getAudioContext()
+    const output = getOutputNode()
+
+    const buffer = audioBufferCache[mapping.file]
+    if (!buffer) {
+      if (failedSamples.has(mapping.file)) {
+        setSampleError(`Sample unavailable: ${mapping.file}`)
+        return
+      }
+      loadBuffer(mapping.file).then((buf) => {
+        if (!buf) {
+          setSampleError(`Failed to load sample: ${mapping.file}`)
+          return
+        }
+        if (!sources.current[keyChar]) return
+        const src = ctx.createBufferSource()
+        const gain = ctx.createGain()
+        gain.gain.value = 0.8
+        src.buffer = buf
+        src.connect(gain)
+        gain.connect(output)
+        src.start()
+        sources.current[keyChar] = { src, gain }
+      })
+      setActiveKeys((prev) => ({ ...prev, [keyChar]: mapping.note }))
+      return
+    }
+
+    const src = ctx.createBufferSource()
+    const gain = ctx.createGain()
+    gain.gain.value = 0.8
+    src.buffer = buffer
+    src.connect(gain)
+    gain.connect(output)
+    src.start()
+
+    sources.current[keyChar] = { src, gain }
+    setActiveKeys((prev) => ({ ...prev, [keyChar]: mapping.note }))
+  }, [setActiveKeys, doStop])
+
+  const stopNote = useCallback((keyChar) => {
+    if (sustainRef?.current) {
+      sustained.current.add(keyChar)
+      return
+    }
+    doStop(keyChar)
+  }, [doStop, sustainRef])
+
+  const releaseSustained = useCallback(() => {
+    for (const k of sustained.current) {
+      doStop(k)
+    }
+    sustained.current.clear()
+  }, [doStop])
+
   useEffect(() => {
     if (!enabled) return
-    preloadAll()
+    preloadKeys(keyMapRef.current)
 
     const handleKeyDown = (e) => {
-      if (e.repeat) return
+      if (e.repeat || e.key === ' ' || e.key === 'z' || e.key === 'x' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') return
       startNote(e.key.toLowerCase())
     }
     const handleKeyUp = (e) => {
+      if (e.key === ' ' || e.key === 'z' || e.key === 'x' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') return
       stopNote(e.key.toLowerCase())
     }
 
@@ -120,5 +153,5 @@ export default function useSampleAudio(activeKeys, setActiveKeys, enabled = true
     }
   }, [startNote, stopNote, enabled])
 
-  return { startNote, stopNote }
+  return { startNote, stopNote, releaseSustained, sampleError }
 }

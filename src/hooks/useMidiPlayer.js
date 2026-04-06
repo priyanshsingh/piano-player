@@ -1,16 +1,10 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Midi } from '@tonejs/midi'
 import { midiNoteToId } from '../constants/midiUtils'
 import { fullNoteMap } from '../constants/fullKeyMap'
+import { getAudioContext, getOutputNode } from '../audio/audioEngine'
 
-// Dedicated audio context for MIDI playback
-let audioCtx = null
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-  return audioCtx
-}
-
-// Simple piano synth for MIDI playback (same harmonics as useSynthAudio)
+// Simple piano synth for MIDI playback
 const HARMONICS = [
   { ratio: 1,  gain: 1.0,  decay: 1.8 },
   { ratio: 2,  gain: 0.45, decay: 1.2 },
@@ -50,7 +44,7 @@ function playMidiNote(ctx, freq, duration) {
   lpf.type = 'lowpass'
   lpf.frequency.value = Math.min(freq * 10, 14000)
   master.connect(lpf)
-  lpf.connect(ctx.destination)
+  lpf.connect(getOutputNode())
 }
 
 export default function useMidiPlayer() {
@@ -94,7 +88,7 @@ export default function useMidiPlayer() {
     }
     rafRef.current = requestAnimationFrame(updateProgress)
 
-    const ctx = getAudioCtx()
+    const ctx = getAudioContext()
 
     for (const track of midi.tracks) {
       for (const note of track.notes) {
@@ -169,33 +163,44 @@ export default function useMidiPlayer() {
     setMidiLoaded(false)
   }, [clearTimers])
 
+  const [midiError, setMidiError] = useState(null)
+
   const loadMidiFile = useCallback((file) => {
     clearTimers()
+    setMidiError(null)
     const reader = new FileReader()
     reader.onload = (e) => {
-      const midi = new Midi(e.target.result)
-      midiDataRef.current = midi
-      setFileName(file.name)
-      setDuration(midi.duration)
-      setProgress(0)
-      setIsPaused(false)
-      setMidiLoaded(true)
+      try {
+        const midi = new Midi(e.target.result)
+        midiDataRef.current = midi
+        setFileName(file.name)
+        setDuration(midi.duration)
+        setProgress(0)
+        setIsPaused(false)
+        setMidiLoaded(true)
 
-      // Auto-play
-      autoPlayRef.current = true
-      setIsPlaying(true)
+        // Auto-play
+        autoPlayRef.current = true
+        setIsPlaying(true)
+      } catch (err) {
+        setMidiError(`Failed to parse MIDI file: ${err.message}`)
+        midiDataRef.current = null
+        setMidiLoaded(false)
+      }
+    }
+    reader.onerror = () => {
+      setMidiError('Failed to read file')
     }
     reader.readAsArrayBuffer(file)
   }, [clearTimers])
 
   // Trigger scheduleNotes when auto-play flag is set
-  // We use a ref check inside play since we can't call scheduleNotes in loadMidiFile callback
-  // (scheduleNotes depends on the latest ref which is set synchronously)
-  if (autoPlayRef.current && isPlaying && midiDataRef.current) {
-    autoPlayRef.current = false
-    // Schedule on next microtask to let state settle
-    Promise.resolve().then(() => scheduleNotes(0))
-  }
+  useEffect(() => {
+    if (autoPlayRef.current && isPlaying && midiDataRef.current) {
+      autoPlayRef.current = false
+      scheduleNotes(0)
+    }
+  }, [isPlaying, scheduleNotes])
 
   return {
     loadMidiFile,
@@ -209,5 +214,6 @@ export default function useMidiPlayer() {
     duration,
     midiActiveNotes,
     midiLoaded,
+    midiError,
   }
 }

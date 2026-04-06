@@ -1,0 +1,77 @@
+.record-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.record-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rec-btn {
+  padding: 6px 14px;
+  font-size: 0.72rem;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.rec-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.rec-start:hover {
+  border-color: #e55;
+  color: #e55;
+}
+
+.rec-stop {
+  border-color: #e55;
+  color: #e55;
+}
+
+.rec-play:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rec-export:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rec-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #e55;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e55;
+  animation: recPulse 1s ease-in-out infinite;
+}
+
+@keyframes recPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

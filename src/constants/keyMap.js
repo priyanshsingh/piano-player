@@ -1,23 +1,40 @@
-// All 17 keys: C4 through E5 (two octaves partially)
-// `file` matches the .mp3 filename inside public/sounds/
-const KEY_MAP = [
-  { key: 'q', note: 'C4',  freq: 261.63, type: 'white', file: 'C4.mp3'  },
-  { key: '2', note: 'C#4', freq: 277.18, type: 'black', file: 'Db4.mp3' },
-  { key: 'w', note: 'D4',  freq: 293.66, type: 'white', file: 'D4.mp3'  },
-  { key: '3', note: 'D#4', freq: 311.13, type: 'black', file: 'Eb4.mp3' },
-  { key: 'e', note: 'E4',  freq: 329.63, type: 'white', file: 'E4.mp3'  },
-  { key: 'r', note: 'F4',  freq: 349.23, type: 'white', file: 'F4.mp3'  },
-  { key: '5', note: 'F#4', freq: 369.99, type: 'black', file: 'Gb4.mp3' },
-  { key: 't', note: 'G4',  freq: 392.00, type: 'white', file: 'G4.mp3'  },
-  { key: '6', note: 'G#4', freq: 415.30, type: 'black', file: 'Ab4.mp3' },
-  { key: 'y', note: 'A4',  freq: 440.00, type: 'white', file: 'A4.mp3'  },
-  { key: '7', note: 'A#4', freq: 466.16, type: 'black', file: 'Bb4.mp3' },
-  { key: 'u', note: 'B4',  freq: 493.88, type: 'white', file: 'B4.mp3'  },
-  { key: 'i', note: 'C5',  freq: 523.25, type: 'white', file: 'C5.mp3'  },
-  { key: '9', note: 'C#5', freq: 554.37, type: 'black', file: 'Db5.mp3' },
-  { key: 'o', note: 'D5',  freq: 587.33, type: 'white', file: 'D5.mp3'  },
-  { key: '0', note: 'D#5', freq: 622.25, type: 'black', file: 'Eb5.mp3' },
-  { key: 'p', note: 'E5',  freq: 659.25, type: 'white', file: 'E5.mp3'  },
+// 17-key layout pattern: which keyboard chars map to which semitones
+const KEY_PATTERN = [
+  { key: 'q', semitone: 0,  type: 'white' }, // C
+  { key: '2', semitone: 1,  type: 'black' }, // C#
+  { key: 'w', semitone: 2,  type: 'white' }, // D
+  { key: '3', semitone: 3,  type: 'black' }, // D#
+  { key: 'e', semitone: 4,  type: 'white' }, // E
+  { key: 'r', semitone: 5,  type: 'white' }, // F
+  { key: '5', semitone: 6,  type: 'black' }, // F#
+  { key: 't', semitone: 7,  type: 'white' }, // G
+  { key: '6', semitone: 8,  type: 'black' }, // G#
+  { key: 'y', semitone: 9,  type: 'white' }, // A
+  { key: '7', semitone: 10, type: 'black' }, // A#
+  { key: 'u', semitone: 11, type: 'white' }, // B
+  { key: 'i', semitone: 12, type: 'white' }, // C+1
+  { key: '9', semitone: 13, type: 'black' }, // C#+1
+  { key: 'o', semitone: 14, type: 'white' }, // D+1
+  { key: '0', semitone: 15, type: 'black' }, // D#+1
+  { key: 'p', semitone: 16, type: 'white' }, // E+1
 ]
 
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+const FLAT_NAMES = { 'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb' }
+
+export function buildKeyMap(baseOctave = 4) {
+  return KEY_PATTERN.map((p) => {
+    const noteIndex = p.semitone % 12
+    const octave = baseOctave + Math.floor(p.semitone / 12)
+    const name = NOTE_NAMES[noteIndex]
+    const note = name + octave
+    const freq = 440 * Math.pow(2, ((baseOctave - 4) * 12 + p.semitone - 9) / 12)
+    const flatName = FLAT_NAMES[name] || name
+    const file = flatName + octave + '.mp3'
+    return { key: p.key, note, freq: Math.round(freq * 100) / 100, type: p.type, file }
+  })
+}
+
+// Default: octave 4
+const KEY_MAP = buildKeyMap(4)
 export default KEY_MAP

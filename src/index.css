@@ -13,7 +13,8 @@ body {
   justify-content: center;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: var(--text);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   transition: background 0.3s;
 }
 
@@ -24,4 +25,16 @@ body {
   justify-content: center;
   min-height: 100vh;
   width: 100%;
+  padding: 20px 10px;
+}
+
+@media (max-width: 768px) {
+  body {
+    justify-content: flex-start;
+  }
+
+  #root {
+    justify-content: flex-start;
+    padding-top: 60px;
+  }
 }

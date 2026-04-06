@@ -21,6 +21,9 @@ export default function MidiPlayer({ midi }) {
 
   return (
     <div className="midi-player">
+      {midi.midiError && (
+        <div className="midi-error">{midi.midiError}</div>
+      )}
       <div className="midi-upload">
         <input
           ref={fileInputRef}
